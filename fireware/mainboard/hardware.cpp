@@ -35,9 +35,9 @@ void vt_pullup(int line) {
 
 int vt_read(int line) {
   if (LINES_SPLIT == AIN_LINES) line = _convertLine(line);
-  
+
   for (int i = 0; i < num_of_pins; i++) {
-    digitalWrite(sel_pins[i], (line & (1 << (i + 1) - 1)) >> i);  
+    digitalWrite(sel_pins[i], (line & (1 << (i + 1) - 1)) >> i);
   }
 
   int pipe = line < 16 ? A1 : A0;      // lower 16 pins is read by A1, higher 16 pins is read by A0
@@ -53,7 +53,7 @@ static int _convertLine(int line) {
   if (line < LINES_SPLIT / 2) {
     return PIN0_AT_MID ? LINES_SPLIT / 2 - line - 1 : line;
   }
-  
+
   return PIN0_AT_MID ? line : LINES_SPLIT + line - 1 - LINES_SPLIT / 2;
 }
 

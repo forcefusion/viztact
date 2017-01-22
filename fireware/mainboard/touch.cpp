@@ -12,7 +12,7 @@ VT_TOUCH_CFG VT_TOUCH;
 
 bool scanTouch() {
   int hasData = false;
-  
+
   // force sensor scan: pull up digital output lines sequencially and read analog input lines sequencially
   for (int x = 0; x < DOUT_LINES; x++) {
     vt_pullup(VT_TOUCH.hInvert ? DOUT_LINES - x - 1 : x);
@@ -81,7 +81,7 @@ void processForceMap() {
       }
 
       touchSquare[CENTER][CENTER] = forceMap[x][y];
-      
+
       int totalForce = 0;
       float hForce = 0, vForce = 0;
       TouchEvent e;
@@ -104,18 +104,18 @@ void processForceMap() {
           Serial.print("(");
           Serial.print(forceMap[x+i-1][y+j-1]);
           Serial.print(")");
-          Serial.print(",");    
+          Serial.print(",");
 #endif
         }
 
         hForce += hSum * i / 2.0;
         vForce += vSum * i / 2.0;
-        
+
 #if ENABLE_TSQ_DEBUG
         Serial.println();
 #endif
       }
-      
+
       e.id = -1;
       e.seq = seq;
       e.ts = millis();
@@ -151,7 +151,7 @@ void processForceMap() {
       Serial.println();
 #endif
 
-      seq++;      
+      seq++;
     }
   }
 }

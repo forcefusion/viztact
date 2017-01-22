@@ -1,3 +1,15 @@
+/*
+  mainboard.ino - ForceFusion VizTact firmware on ATMEGA32U4 (Arduino Leonardo).
+
+  Copyright (c) 2017 Quark Li
+
+  This software is developped for a commersial product. Modification, further
+  development and/or redistribution without prior agreement from the author 
+  is prohibited.
+
+  To whom is interested in using this software, please contact quarkli@gmail.com
+*/
+
 #include "hardware.h"
 #include "touch.h"
 

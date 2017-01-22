@@ -1,3 +1,14 @@
+/*
+  hardware.cpp - ForceFusion VizTact VT3224 touch sensor hardware functions.
+
+  Copyright (c) 2017 Quark Li
+
+  This software is developped for a commersial product. Modification, further
+  development and/or redistribution without prior agreement from the author 
+  is prohibited.
+
+  To whom is interested in using this software, please contact quarkli@gmail.com
+*/
 #include "hardware.h"
 
 static const char sel_pins[] = SEL_PINS;

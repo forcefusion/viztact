@@ -1,3 +1,14 @@
+/*
+  hardware.h - Header file for ForceFusion VizTact VT3224 touch sensor hardware.
+
+  Copyright (c) 2017 Quark Li
+
+  This software is developped for a commersial product. Modification, further
+  development and/or redistribution without prior agreement from the author 
+  is prohibited.
+
+  To whom is interested in using this software, please contact quarkli@gmail.com
+*/
 #ifndef __VT_HARDWARE__
 #define __VT_HARDWARE__
 

@@ -1,7 +1,9 @@
 #include "touch.h"
 
-#define ENABLE_TSQ_DEBUG  1           // Enable touch square data dump to console print
+#define ENABLE_TSQ_DEBUG  0           // Enable touch square data dump to console print
 #define ENABLE_EVT_DEBUG  1           // Enable touch event output to console
+
+const int CENTER = 1;
 
 int forceMap[COLS][ROWS] = {0};       // Full force map
 static unsigned int seq = 0;
@@ -39,46 +41,46 @@ void processForceMap() {
       // top-left
       if (x > 0 && y > 0) {
         if (forceMap[x][y] <= forceMap[x-1][y-1]) continue;
-        touchSquare[0][0] = forceMap[x-1][y-1];
+        touchSquare[CENTER-1][CENTER-1] = forceMap[x-1][y-1];
       }
       // top
       if (y > 0) {
         if (forceMap[x][y] <= forceMap[x][y-1]) continue;
-        touchSquare[1][0] = forceMap[x][y-1];
+        touchSquare[CENTER][CENTER-1] = forceMap[x][y-1];
       }
       // top-right
-      if (x < DOUT_LINES-1 && y > 0) {
+      if (x < COLS-1 && y > 0) {
         if (forceMap[x][y] <= forceMap[x+1][y-1]) continue;
-        touchSquare[2][0] = forceMap[x+1][y-1];
+        touchSquare[CENTER+1][CENTER-1] = forceMap[x+1][y-1];
       }
       // left
       if (x > 0) {
         if (forceMap[x][y] <= forceMap[x-1][y]) continue;
-        touchSquare[0][1] = forceMap[x-1][y];
+        touchSquare[CENTER-1][CENTER] = forceMap[x-1][y];
       }
 
       // right
-      if (x < DOUT_LINES-1) {
+      if (x < COLS-1) {
         if (forceMap[x][y] < forceMap[x+1][y]) continue;
-        touchSquare[2][1] = forceMap[x+1][y];
+        touchSquare[CENTER+1][CENTER] = forceMap[x+1][y];
       }
       // bottom-left
-      if (x > 0 && y > y < AIN_LINES-1) {
+      if (x > 0 && y < ROWS-1) {
         if (forceMap[x][y] < forceMap[x-1][y+1]) continue;
-        touchSquare[0][2] = forceMap[x-1][y+1];
+        touchSquare[CENTER-1][CENTER+1] = forceMap[x-1][y+1];
       }
       // bottom
-      if (y < AIN_LINES-1) {
+      if (y < ROWS-1) {
         if (forceMap[x][y] < forceMap[x][y+1]) continue;
-        touchSquare[1][2] = forceMap[x][y+1];
+        touchSquare[CENTER][CENTER+1] = forceMap[x][y+1];
       }
       // bottom-right
-      if (x < DOUT_LINES-1 && y < AIN_LINES-1) {
+      if (x < COLS-1 && y < ROWS-1) {
         if (forceMap[x][y] < forceMap[x+1][y+1]) continue;
-        touchSquare[2][2] = forceMap[x+1][y+1];
+        touchSquare[CENTER+1][CENTER+1] = forceMap[x+1][y+1];
       }
 
-      touchSquare[1][1] = forceMap[x][y];
+      touchSquare[CENTER][CENTER] = forceMap[x][y];
       
       int totalForce = 0;
       float hForce = 0, vForce = 0;
@@ -88,7 +90,7 @@ void processForceMap() {
       Serial.print(x);
       Serial.print(",");
       Serial.print(y);
-      Serial.println(",");
+      Serial.println("=");
 #endif
       for (int i = 0; i < 3; i++) {
         int vSum = 0, hSum = 0;
@@ -99,6 +101,9 @@ void processForceMap() {
 
 #if ENABLE_TSQ_DEBUG
           Serial.print(touchSquare[i][j]);
+          Serial.print("(");
+          Serial.print(forceMap[x+i-1][y+j-1]);
+          Serial.print(")");
           Serial.print(",");    
 #endif
         }
@@ -116,23 +121,23 @@ void processForceMap() {
       e.ts = millis();
       e.gridX = x;
       e.gridY = y;
-      e.posX = vForce / totalForce * 2 - 1;
-      e.posY = hForce / totalForce * 2 - 1;
+      e.posX = x + hForce / totalForce * 2 - 1;
+      e.posY = y + vForce / totalForce * 2 - 1;
       e.centerForce = touchSquare[1][1];
       e.totalForce = totalForce;
       e.forceLevel = 0;
 
 #if ENABLE_EVT_DEBUG
-//      Serial.print("Event ID: ");
-//      Serial.println(e.id);
-//      Serial.print("Seq No.: ");
-//      Serial.println(e.seq);
-//      Serial.print("Timestamp.: ");
-//      Serial.println(e.ts);
-//      Serial.print("GRID X: ");
-//      Serial.println(e.gridX);
-//      Serial.print("GRID Y: ");
-//      Serial.println(e.gridY);
+      Serial.print("Event ID: ");
+      Serial.println(e.id);
+      Serial.print("Seq No.: ");
+      Serial.println(e.seq);
+      Serial.print("Timestamp.: ");
+      Serial.println(e.ts);
+      Serial.print("GRID X: ");
+      Serial.println(e.gridX);
+      Serial.print("GRID Y: ");
+      Serial.println(e.gridY);
       Serial.print("POS X: ");
       Serial.println(e.posX);
       Serial.print("POS Y: ");
@@ -141,9 +146,9 @@ void processForceMap() {
       Serial.println(e.centerForce);
       Serial.print("Total-F: ");
       Serial.println(e.totalForce);
-//      Serial.print("F-Level: ");
-//      Serial.println(e.forceLevel);
-//      Serial.println();
+      Serial.print("F-Level: ");
+      Serial.println(e.forceLevel);
+      Serial.println();
 #endif
 
       seq++;      

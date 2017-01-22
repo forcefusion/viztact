@@ -8,7 +8,7 @@ static int t0 = millis();            // Time in (ms)
 
 void setup() {
   vt_init();
-  VT_TOUCH.hInvert = false;
+  VT_TOUCH.hInvert = true;
   VT_TOUCH.vInvert = true;
 }
 

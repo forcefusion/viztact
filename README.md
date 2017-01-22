@@ -1,2 +1,2 @@
 # viztact
-VizTact is a force-sensitive remote TouchPad development product development project.
+VizTact is ForceFusion's force-sensitive touch input device develpoment project.

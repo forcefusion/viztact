@@ -4,20 +4,22 @@
 #include "Arduino.h"
 #include "hardware.h"
 
-class touchEvent {
-  unsigned int id;
-  unsigned int seq;
-  unsigned int ts;
-  unsigned int gridX;
-  unsigned int gridY;
-  float posX;
-  float posY;
-  unsigned int centerForce;
-  unsigned int totalForce;
-  unsigned char forceLevel;
-  unsigned char levelUp;
-  unsigned char levelDown;
-  unsigned char padding;
+class TouchEvent {
+  public:
+    unsigned int id;
+    unsigned int seq;
+    unsigned int ts;
+    unsigned int gridX;
+    unsigned int gridY;
+    float posX;
+    float posY;
+    unsigned int centerForce;
+    unsigned int totalForce;
+    unsigned char forceLevel;
+
+  private:
+    unsigned char levelUp;
+    unsigned char levelDown;
 };
 
 class VT_TOUCH_CFG {
@@ -26,9 +28,10 @@ class VT_TOUCH_CFG {
     bool vInvert = false;
 };
 
+bool scanTouch();
 void processForceMap();
 
-extern int forceMap[COLS][ROWS];
 extern VT_TOUCH_CFG VT_TOUCH;
+extern int forceMap[COLS][ROWS];
 
 #endif

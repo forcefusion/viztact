@@ -20,9 +20,15 @@ class touchEvent {
   unsigned char padding;
 };
 
+class VT_TOUCH_CFG {
+  public:
+    bool hInvert = false;
+    bool vInvert = false;
+};
+
 void processForceMap();
 
-extern int forceMap[24][16];
-
+extern int forceMap[COLS][ROWS];
+extern VT_TOUCH_CFG VT_TOUCH;
 
 #endif

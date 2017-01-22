@@ -1,6 +1,11 @@
 #include "touch.h"
 
+int forceMap[COLS][ROWS] = {0};  // Full force map
 static int touchSquare[3][3] = {0}; // Temporary 3x3 force map for evaluation force center
+touchEvent te[10];
+int validEvent = 0;
+
+VT_TOUCH_CFG VT_TOUCH;
 
 void processForceMap() {
   for (int x = 0; x < DOUT_LINES; x++) {

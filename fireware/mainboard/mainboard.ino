@@ -3,14 +3,11 @@
 
 static int c = 0;                   // Scan rate counter
 static int t = millis();            // Time in (ms)
-int forceMap[24][16] = {0};  // Full force map
 static  bool hasData = false;
-
-touchEvent te[10];
-int validEvent = 0;
 
 void setup() {
   vt_init();
+  VT_TOUCH.hInvert = true;
 }
 
 void loop() {
@@ -19,7 +16,8 @@ void loop() {
   // force sensor scan: pull up digital output lines sequencially and read analog input lines sequencially
   for (int x = 0; x < 24; x++) {
     int yy = 0;
-    vt_pullup(x < 12 ? x : 35 - x);
+    vt_pullup(x);
+//    vt_pullup(x < 12 ? x : 35 - x);
     for (int y = 15; y >= 0; y--) {
       int val = vt_read(y);
 

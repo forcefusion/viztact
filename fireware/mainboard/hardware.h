@@ -11,8 +11,9 @@
 #define COLS 			    24
 #define DOUT_LINES 		COLS
 #define AIN_LINES 		ROWS
-#define REV_ORDER     1               // Reverse line order switch
+#define REV_ORDER     true            // Reverse line order switch
 #define LINES_SPLIT   COLS            // Lines are splitted in two sides (half of them will be in reverse order)
+#define PIN0_AT_MID   true            // The first pin (PIN 0) of split lines is at the middle
 
 void vt_init();
 void vt_pullup(int line);

@@ -15,32 +15,21 @@
 #include "Arduino.h"
 #include "hardware.h"
 
-class TouchEvent {
-  public:
-    unsigned int id;
-    unsigned int seq;
-    unsigned int ts;
-    unsigned int gridX;
-    unsigned int gridY;
-    float posX;
-    float posY;
-    unsigned int centerForce;
-    unsigned int totalForce;
-    unsigned char forceLevel;
-
-  private:
-    unsigned char levelUp;
-    unsigned char levelDown;
+enum VT_CONSOLE_OUTPUT {
+  VT_OUTPUT_OFF,          // Turn off touch scan result console output
+  VT_OUTPUT_RAW,          // Output touch scan result as full forceMap raw data to console
+  VT_OUTPUT_TOUCH,        // Output touch scan result as each touch data (x/y/force) to console
+  VT_OUTPUT_EVENT         // Output touch scan result as touch events
 };
 
 class VT_TOUCH_CFG {
   public:
     bool hInvert = false;
     bool vInvert = false;
+    VT_CONSOLE_OUTPUT output = VT_OUTPUT_OFF;
 };
 
-bool scanTouch();
-void processForceMap();
+void scanTouch();
 
 extern VT_TOUCH_CFG VT_TOUCH;
 extern int forceMap[COLS][ROWS];

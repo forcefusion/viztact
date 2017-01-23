@@ -20,15 +20,14 @@ static int t0 = millis();            // Time in (ms)
 
 void setup() {
   vt_init();
-  VT_TOUCH.hInvert = true;
+
+  VT_TOUCH.hInvert = false;
   VT_TOUCH.vInvert = true;
+  VT_TOUCH.output = VT_OUTPUT_EVENT;
 }
 
 void loop() {
-  if (scanTouch()) {
-    processForceMap();
-    Serial.println();
-  }
+  scanTouch();
   
 #if ENABLE_MEASUREMENT     // calculate scan rate (Hz) in 10 seconds period
   int t1 = millis();

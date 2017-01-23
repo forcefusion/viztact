@@ -11,6 +11,7 @@
 */
 
 #include "touch.h"
+#include "event.h"
 
 #define ENABLE_TSQ_DEBUG  0           // Enable touch square data dump to console print
 #define ENABLE_EVT_DEBUG  1           // Enable touch event output to console
@@ -22,7 +23,9 @@ static unsigned int seq = 0;
 
 VT_TOUCH_CFG VT_TOUCH;
 
-bool scanTouch() {
+void processForceMap();
+
+void scanTouch() {
   int hasData = false;
 
   // force sensor scan: pull up digital output lines sequencially and read analog input lines sequencially
@@ -39,7 +42,10 @@ bool scanTouch() {
       else forceMap[y][x];
     }
   }
-  return hasData;
+
+  if (hasData) processForceMap();
+
+  seq++;
 }
 
 void processForceMap() {
@@ -151,9 +157,9 @@ void processForceMap() {
       Serial.print("GRID Y: ");
       Serial.println(e.gridY);
       Serial.print("POS X: ");
-      Serial.println(e.posX);
+      Serial.println(e.posX, 6);
       Serial.print("POS Y: ");
-      Serial.println(e.posY);
+      Serial.println(e.posY, 6);
       Serial.print("Center-F: ");
       Serial.println(e.centerForce);
       Serial.print("Total-F: ");
@@ -162,8 +168,6 @@ void processForceMap() {
       Serial.println(e.forceLevel);
       Serial.println();
 #endif
-
-      seq++;
     }
   }
 }

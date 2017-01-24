@@ -26,7 +26,7 @@ void updateTouchEvent(VT_TOUCH_EVENT ein[10], int sz) {
     float delta = -1;
     int id = -1;
     for (int j = 0; j < n; j++) {
-      int cur_delta = -1;
+      float cur_delta = -1;
       if (sz > size) {
         if (abs(eventList[i].vector.radius - ein[j].vector.radius) < 3) {
           cur_delta = abs(eventList[i].vector.radius - ein[j].vector.radius) * abs(eventList[i].vector.sine - ein[j].vector.sine);
@@ -38,9 +38,11 @@ void updateTouchEvent(VT_TOUCH_EVENT ein[10], int sz) {
         }        
       }
 
-      if (delta < 0 || (cur_delta >= 0 && cur_delta < delta)) {
+      if (cur_delta >= 0 && (delta < 0 || cur_delta < delta)) {
         delta = cur_delta;
         id = j;
+        Serial.print("Delta: ");
+        Serial.println(delta, 8);
       }
     }
 

@@ -14,25 +14,28 @@
 #include "event.h"
 
 #define ENABLE_TSQ_DEBUG  0           // Enable touch square data dump to console print
-#define ENABLE_EVT_DEBUG  1           // Enable touch event output to console
 
 const int CENTER = 1;
 
-int forceMap[COLS][ROWS] = {0};       // Full force map
-static unsigned int seq = 0;
+static int forceMap[COLS][ROWS] = {0};       // Full force map
+static unsigned long timestamp = 0;
 
-VT_TOUCH_CFG VT_TOUCH;
+VT_TOUCH_CFG Touch_Config;
+VT_TOUCH_EVENT ein[10];
+int sz = 0;
 
 void processForceMap();
 
 void scanTouch() {
   int hasData = false;
+  timestamp = millis();
+  sz = 0;
 
   // force sensor scan: pull up digital output lines sequencially and read analog input lines sequencially
   for (int x = 0; x < DOUT_LINES; x++) {
-    vt_pullup(VT_TOUCH.hInvert ? DOUT_LINES - x - 1 : x);
+    vt_pullup(Touch_Config.hInvert ? DOUT_LINES - x - 1 : x);
     for (int y = 0; y < AIN_LINES; y++) {
-      int val = vt_read(VT_TOUCH.vInvert ? AIN_LINES - y - 1: y);
+      int val = vt_read(Touch_Config.vInvert ? AIN_LINES - y - 1: y);
 
       // force value below 4 is filtered out as noise
       if (val > 4) hasData = true;
@@ -40,12 +43,28 @@ void scanTouch() {
 
       if (DOUT_LINES == COLS) forceMap[x][y] = val;
       else forceMap[y][x];
+      
+      if (Touch_Config.output == VT_OUTPUT_RAW) {
+        Serial.print(val);
+        Serial.print(",");
+      }
+      else if (Touch_Config.output == VT_OUTPUT_FORCE && val > 0) {
+        Serial.print(x);
+        Serial.print(",");
+        Serial.print(y);
+        Serial.print(",");
+        Serial.print(val);
+        Serial.print("/");
+      }
     }
   }
 
   if (hasData) processForceMap();
+  updateTouchEvent(ein, sz);
 
-  seq++;
+  if (Touch_Config.output != VT_OUTPUT_OFF) {
+    if (hasData || Touch_Config.output == VT_OUTPUT_RAW) Serial.println();
+  }
 }
 
 void processForceMap() {
@@ -102,8 +121,6 @@ void processForceMap() {
 
       int totalForce = 0;
       float hForce = 0, vForce = 0;
-      TouchEvent e;
-
 #if ENABLE_TSQ_DEBUG
       Serial.print(x);
       Serial.print(",");
@@ -116,7 +133,6 @@ void processForceMap() {
           totalForce += touchSquare[i][j];
           hSum += touchSquare[i][j];
           vSum += touchSquare[j][i];
-
 #if ENABLE_TSQ_DEBUG
           Serial.print(touchSquare[i][j]);
           Serial.print("(");
@@ -128,46 +144,32 @@ void processForceMap() {
 
         hForce += hSum * i / 2.0;
         vForce += vSum * i / 2.0;
-
 #if ENABLE_TSQ_DEBUG
         Serial.println();
 #endif
       }
 
-      e.id = -1;
-      e.seq = seq;
-      e.ts = millis();
-      e.gridX = x;
-      e.gridY = y;
-      e.posX = x + hForce / totalForce * 2 - 1;
-      e.posY = y + vForce / totalForce * 2 - 1;
+      VT_TOUCH_EVENT e;
+      e.ts = timestamp;
+      e.grid.x = x;
+      e.grid.y = y;
+      e.pos.x = x + hForce / totalForce * 2 - 1;
+      e.pos.y = y + vForce / totalForce * 2 - 1;
       e.centerForce = touchSquare[1][1];
       e.totalForce = totalForce;
-      e.forceLevel = 0;
+      e.vector.radius = sqrt(pow(e.pos.x + 1,2) + pow(e.pos.y + 1,2));
+      e.vector.sine = (e.pos.y + 1) / e.vector.radius;
 
-#if ENABLE_EVT_DEBUG
-      Serial.print("Event ID: ");
-      Serial.println(e.id);
-      Serial.print("Seq No.: ");
-      Serial.println(e.seq);
-      Serial.print("Timestamp.: ");
-      Serial.println(e.ts);
-      Serial.print("GRID X: ");
-      Serial.println(e.gridX);
-      Serial.print("GRID Y: ");
-      Serial.println(e.gridY);
-      Serial.print("POS X: ");
-      Serial.println(e.posX, 6);
-      Serial.print("POS Y: ");
-      Serial.println(e.posY, 6);
-      Serial.print("Center-F: ");
-      Serial.println(e.centerForce);
-      Serial.print("Total-F: ");
-      Serial.println(e.totalForce);
-      Serial.print("F-Level: ");
-      Serial.println(e.forceLevel);
-      Serial.println();
-#endif
+      ein[sz++] = e;
+     
+      if (Touch_Config.output == VT_OUTPUT_TOUCH) {
+        Serial.print(e.pos.x);
+        Serial.print(",");
+        Serial.print(e.pos.y);
+        Serial.print(",");
+        Serial.print(totalForce);
+        Serial.print("/");       
+      }
     }
   }
 }

@@ -12,31 +12,27 @@
 #ifndef __VT_EVENT__
 #define __VT_EVENT__
 
+#include "touch.h"
 #include "Arduino.h"
 
-class TouchEvent {
+class VT_TOUCH_EVENT {
   public:
-    unsigned int id;
-    unsigned int seq;
-    unsigned int ts;
-    unsigned int gridX;
-    unsigned int gridY;
-    float posX;
-    float posY;
-    unsigned int centerForce;
-    unsigned int totalForce;
-    unsigned char forceLevel;
-
-  private:
-    unsigned char levelUp;
-    unsigned char levelDown;
+    unsigned int id = 0;
+    unsigned int seq = 0;
+    unsigned int ts = 0;
+    VT_POINT grid;
+    VT_POINT pos;
+    VT_VECTOR vector;
+    unsigned int centerForce = 0;
+    unsigned int totalForce = 0;
+    char forceLevel = -1;
+    unsigned char levelUp = 0;
+    unsigned char levelDown = 0;
+    char referBy = -1;
+    char referTo = -1;
 };
 
-class EventList {
-  public:
-    unsigned int size = 0;
-    TouchEvent list[10];
-    void updateList(TouchEvent* e);
-};
+void updateTouchEvent(VT_TOUCH_EVENT ein[10], int sz);
+VT_TOUCH_EVENT* nextEvent();
 
 #endif

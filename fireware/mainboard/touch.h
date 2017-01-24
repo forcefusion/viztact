@@ -17,9 +17,9 @@
 
 enum VT_CONSOLE_OUTPUT {
   VT_OUTPUT_OFF,          // Turn off touch scan result console output
-  VT_OUTPUT_RAW,          // Output touch scan result as full forceMap raw data to console
-  VT_OUTPUT_TOUCH,        // Output touch scan result as each touch data (x/y/force) to console
-  VT_OUTPUT_EVENT         // Output touch scan result as touch events
+  VT_OUTPUT_RAW,          // Output full touch scan result of force raw data to console
+  VT_OUTPUT_FORCE,        // Output only valid force data (x/y/force) to console
+  VT_OUTPUT_TOUCH         // Output touch data (pos-x/pos-y/total-force) to console
 };
 
 class VT_TOUCH_CFG {
@@ -29,9 +29,20 @@ class VT_TOUCH_CFG {
     VT_CONSOLE_OUTPUT output = VT_OUTPUT_OFF;
 };
 
+class VT_POINT {
+  public:
+    float x;
+    float y;
+};
+
+class VT_VECTOR {
+  public:
+    float radius;
+    float sine;
+};
+
 void scanTouch();
 
-extern VT_TOUCH_CFG VT_TOUCH;
-extern int forceMap[COLS][ROWS];
+extern VT_TOUCH_CFG Touch_Config;
 
 #endif

@@ -15,27 +15,27 @@
 
 #define ENABLE_TSQ_DEBUG  0           // Enable touch square data dump to console print
 
-const int CENTER = 1;
+const byte CENTER = 1;
 
-static int forceMap[COLS][ROWS] = {0};       // Full force map
+static unsigned short forceMap[COLS][ROWS] = {0};       // Full force map
 static unsigned long timestamp = 0;
+static byte sz = 0;
 
 VT_TOUCH_CFG Touch_Config;
-VT_TOUCH_EVENT ein[10];
-int sz = 0;
+VT_TOUCH_EVENT ein[5];
 
 void processForceMap();
 
 void scanTouch() {
-  int hasData = false;
+  bool hasData = false;
   timestamp = millis();
   sz = 0;
 
   // force sensor scan: pull up digital output lines sequencially and read analog input lines sequencially
-  for (int x = 0; x < DOUT_LINES; x++) {
+  for (byte x = 0; x < DOUT_LINES; x++) {
     vt_pullup(Touch_Config.hInvert ? DOUT_LINES - x - 1 : x);
-    for (int y = 0; y < AIN_LINES; y++) {
-      int val = vt_read(Touch_Config.vInvert ? AIN_LINES - y - 1: y);
+    for (byte y = 0; y < AIN_LINES; y++) {
+      short val = vt_read(Touch_Config.vInvert ? AIN_LINES - y - 1: y);
 
       // force value below 4 is filtered out as noise
       if (val > 4) hasData = true;
@@ -68,9 +68,9 @@ void scanTouch() {
 }
 
 void processForceMap() {
-  for (int x = 0; x < COLS; x++) {
-    for (int y = 0; y < ROWS; y++) {
-      int touchSquare[3][3] = {0};        // Temporary 3x3 force map for evaluation force center
+  for (byte x = 0; x < COLS; x++) {
+    for (byte y = 0; y < ROWS; y++) {
+      short touchSquare[3][3] = {0};        // Temporary 3x3 force map for evaluation force center
 
       // looking for a force center where a force center must has its neighbor's force lower than (or equal to) its force value
       if (forceMap[x][y] == 0) continue;
@@ -119,7 +119,7 @@ void processForceMap() {
 
       touchSquare[CENTER][CENTER] = forceMap[x][y];
 
-      int totalForce = 0;
+      short totalForce = 0;
       float hForce = 0, vForce = 0;
 #if ENABLE_TSQ_DEBUG
       Serial.print(x);
@@ -127,9 +127,9 @@ void processForceMap() {
       Serial.print(y);
       Serial.println("=");
 #endif
-      for (int i = 0; i < 3; i++) {
-        int vSum = 0, hSum = 0;
-        for (int j = 0; j < 3; j++) {
+      for (byte i = 0; i < 3; i++) {
+        short vSum = 0, hSum = 0;
+        for (byte j = 0; j < 3; j++) {
           totalForce += touchSquare[i][j];
           hSum += touchSquare[i][j];
           vSum += touchSquare[j][i];

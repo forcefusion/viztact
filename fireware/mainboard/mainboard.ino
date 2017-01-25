@@ -17,8 +17,8 @@
 #define ENABLE_MEASUREMENT  0
 #define ENABLE_EVENT_DEBUG 1
 
-static int count = 0;                // Scan rate counter
-static int t0 = millis();            // Time in (ms)
+static byte count = 0;                // Scan rate counter
+static unsigned long t0 = millis();   // Time in (ms)
 
 void setup() {
   vt_init();
@@ -31,28 +31,34 @@ void loop() {
   scanTouch();
   while (VT_TOUCH_EVENT* e = nextEvent()) {
 #if ENABLE_EVENT_DEBUG
-      Serial.print("Event ID: ");
-      Serial.println(e->id);
       Serial.print("Seq No.: ");
       Serial.println(e->seq);
-      Serial.print("Timestamp.: ");
+      Serial.print("Event ID / Timestamp: ");
+      Serial.print(e->id);
+      Serial.print(" / ");
       Serial.println(e->ts);
-      Serial.print("GRID X: ");
-      Serial.println(e->grid.x);
-      Serial.print("GRID Y: ");
-      Serial.println(e->grid.y);
-      Serial.print("POS X: ");
-      Serial.println(e->pos.x, 3);
-      Serial.print("POS Y: ");
-      Serial.println(e->pos.y, 3);
-      Serial.print("Radius: ");
-      Serial.println(e->vector.radius, 3);
-      Serial.print("Sine: ");
+      Serial.print("GRID: (");
+      Serial.print(e->grid.x);
+      Serial.print(", ");
+      Serial.print(e->grid.y);
+      Serial.println(")");
+      Serial.print("POS: (");
+      Serial.print(e->pos.x, 3);
+      Serial.print(", ");
+      Serial.print(e->pos.y, 3);
+      Serial.println(")");
+      Serial.print("Vector: ");
+      Serial.print(e->vector.radius, 3);
+      Serial.print(" / ");
       Serial.println(e->vector.sine, 3);
-      Serial.print("Center-F: ");
-      Serial.println(e->centerForce);
-      Serial.print("Total-F: ");
+      Serial.print("Force: ");
+      Serial.print(e->centerForce);
+      Serial.print(" / ");
       Serial.println(e->totalForce);
+      Serial.print("Level Up/Down: ");
+      Serial.print(e->levelUp);
+      Serial.print(" / ");
+      Serial.println(e->levelDown);
       Serial.print("F-Level: ");
       Serial.println(e->forceLevel);
       Serial.println();
@@ -60,7 +66,7 @@ void loop() {
   }
   
 #if ENABLE_MEASUREMENT     // calculate scan rate (Hz) in 10 seconds period
-  int t1 = millis();
+  unsigned long t1 = millis();
 
   if (t1 - t0 >= 10000) {
     Serial.print("Scan rate (Hz) = ");

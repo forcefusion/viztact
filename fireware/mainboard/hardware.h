@@ -26,7 +26,7 @@
 #define PIN0_AT_MID true            // The first pin (PIN 0) of split lines is at the middle
 
 void vt_init();
-void vt_pullup(int line);
-int vt_read(int line);
+void vt_pullup(byte line);
+byte vt_read(byte line);
 
 #endif

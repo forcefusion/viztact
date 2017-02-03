@@ -13,11 +13,12 @@
 #include "hardware.h"
 #include "touch.h"
 #include "event.h"
+#include <Mouse.h>
 
 #define ENABLE_MEASUREMENT  0
-#define ENABLE_EVENT_DEBUG 1
+#define ENABLE_EVENT_DEBUG 0
 
-static byte count = 0;                // Scan rate counter
+static short count = 0;                // Scan rate counter
 static unsigned long t0 = millis();   // Time in (ms)
 
 void setup() {
@@ -25,16 +26,31 @@ void setup() {
 
   Touch_Config.hInvert = false;
   Touch_Config.vInvert = true;
+  Touch_Config.output = VT_OUTPUT_OFF;
 }
 
+byte clr = 0;
+float px, py;
+unsigned long last = 0;
 void loop() {
+  bool hasEvent = false;
   scanTouch();
   while (VT_TOUCH_EVENT* e = nextEvent()) {
+    hasEvent = true;
+    if (clr > 0) {
+      float distx = e->pos.x - px;
+      float disty = e->pos.y - py;
+      float sp = sqrt(pow(distx, 2) + pow(disty, 2)) / (e->ts - last) * 100;
+      Mouse.move(distx * 10 * sp, disty * 10 * sp, 0);
+    }
+    px = e->pos.x;
+    py = e->pos.y;
+    last = e->ts;
+    if (clr < 2) clr++;
+    
 #if ENABLE_EVENT_DEBUG
-      Serial.print("Seq No.: ");
-      Serial.println(e->seq);
-      Serial.print("Event ID / Timestamp: ");
-      Serial.print(e->id);
+      Serial.print("Seq No. / Timestamp: ");
+      Serial.print(e->seq);
       Serial.print(" / ");
       Serial.println(e->ts);
       Serial.print("GRID: (");
@@ -47,24 +63,16 @@ void loop() {
       Serial.print(", ");
       Serial.print(e->pos.y, 3);
       Serial.println(")");
-      Serial.print("Vector: ");
-      Serial.print(e->vector.radius, 3);
-      Serial.print(" / ");
-      Serial.println(e->vector.sine, 3);
       Serial.print("Force: ");
       Serial.print(e->centerForce);
       Serial.print(" / ");
       Serial.println(e->totalForce);
-      Serial.print("Level Up/Down: ");
-      Serial.print(e->levelUp);
-      Serial.print(" / ");
-      Serial.println(e->levelDown);
-      Serial.print("F-Level: ");
-      Serial.println(e->forceLevel);
       Serial.println();
 #endif   
   }
-  
+
+  if (!hasEvent && clr > 0) clr--;
+
 #if ENABLE_MEASUREMENT     // calculate scan rate (Hz) in 10 seconds period
   unsigned long t1 = millis();
 

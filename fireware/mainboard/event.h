@@ -15,26 +15,19 @@
 #include "touch.h"
 #include "Arduino.h"
 
-#define DEBOUNCE 2
+#define VT_EVENT_MAX 1
 
 class VT_TOUCH_EVENT {
   public:
-    unsigned short id = 0;
     unsigned short seq = 0;
     unsigned long ts = 0;
     VT_POINT grid;
     VT_POINT pos;
-    VT_VECTOR vector;
     unsigned short centerForce = 0;
     unsigned short totalForce = 0;
-    byte forceLevel = 0;
-    byte levelUp = 0;
-    byte levelDown = 0;
-    short referBy = -1;
-    short referTo = -1;
 };
 
-void updateTouchEvent(VT_TOUCH_EVENT ein[10], byte sz);
+void updateTouchEvent(VT_TOUCH_EVENT ein[VT_EVENT_MAX], byte sz);
 VT_TOUCH_EVENT* nextEvent();
 
 #endif

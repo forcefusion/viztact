@@ -13,16 +13,21 @@
 #include "touch.h"
 #include "event.h"
 
+#define TSQ_SIZE 3
+#define CENTER 1
+#define LEFT(x) x - 1
+#define RIGHT(x) x + 1
+#define UP(x) LEFT(x)
+#define DOWN(x) RIGHT(x)
+
 #define ENABLE_TSQ_DEBUG  0           // Enable touch square data dump to console print
 
-const byte CENTER = 1;
-
-static unsigned short forceMap[COLS][ROWS] = {0};       // Full force map
+static short forceMap[COLS][ROWS] = {0};       // Full force map
 static unsigned long timestamp = 0;
 static byte sz = 0;
 
 VT_TOUCH_CFG Touch_Config;
-VT_TOUCH_EVENT ein[5];
+VT_TOUCH_EVENT ein[VT_EVENT_MAX];
 
 void processForceMap();
 
@@ -36,14 +41,13 @@ void scanTouch() {
     vt_pullup(Touch_Config.hInvert ? DOUT_LINES - x - 1 : x);
     for (byte y = 0; y < AIN_LINES; y++) {
       short val = vt_read(Touch_Config.vInvert ? AIN_LINES - y - 1: y);
-
-      // force value below 4 is filtered out as noise
-      if (val > 4) hasData = true;
-      else val = 0;
+      val = val < 4 ? 0 : val; 
 
       if (DOUT_LINES == COLS) forceMap[x][y] = val;
-      else forceMap[y][x];
-      
+      else forceMap[y][x] = val;
+
+      if (val > 0) hasData = true;
+
       if (Touch_Config.output == VT_OUTPUT_RAW) {
         Serial.print(val);
         Serial.print(",");
@@ -70,51 +74,51 @@ void scanTouch() {
 void processForceMap() {
   for (byte x = 0; x < COLS; x++) {
     for (byte y = 0; y < ROWS; y++) {
-      short touchSquare[3][3] = {0};        // Temporary 3x3 force map for evaluation force center
+      short touchSquare[TSQ_SIZE][TSQ_SIZE] = {0};        // Temporary 3x3 force map for evaluation force center
 
       // looking for a force center where a force center must has its neighbor's force lower than (or equal to) its force value
       if (forceMap[x][y] == 0) continue;
 
       // top-left
       if (x > 0 && y > 0) {
-        if (forceMap[x][y] <= forceMap[x-1][y-1]) continue;
-        touchSquare[CENTER-1][CENTER-1] = forceMap[x-1][y-1];
+        if (forceMap[x][y] <= forceMap[LEFT(x)][UP(y)]) continue;
+        touchSquare[LEFT(CENTER)][UP(CENTER)] = forceMap[LEFT(x)][UP(y)];
       }
       // top
       if (y > 0) {
-        if (forceMap[x][y] <= forceMap[x][y-1]) continue;
-        touchSquare[CENTER][CENTER-1] = forceMap[x][y-1];
+        if (forceMap[x][y] <= forceMap[x][UP(y)]) continue;
+        touchSquare[CENTER][UP(CENTER)] = forceMap[x][UP(y)];
       }
       // top-right
       if (x < COLS-1 && y > 0) {
-        if (forceMap[x][y] <= forceMap[x+1][y-1]) continue;
-        touchSquare[CENTER+1][CENTER-1] = forceMap[x+1][y-1];
+        if (forceMap[x][y] <= forceMap[RIGHT(x)][UP(y)]) continue;
+        touchSquare[RIGHT(CENTER)][UP(CENTER)] = forceMap[RIGHT(x)][UP(y)];
       }
       // left
       if (x > 0) {
-        if (forceMap[x][y] <= forceMap[x-1][y]) continue;
-        touchSquare[CENTER-1][CENTER] = forceMap[x-1][y];
+        if (forceMap[x][y] <= forceMap[LEFT(x)][y]) continue;
+        touchSquare[LEFT(CENTER)][CENTER] = forceMap[LEFT(x)][y];
       }
 
       // right
       if (x < COLS-1) {
-        if (forceMap[x][y] < forceMap[x+1][y]) continue;
-        touchSquare[CENTER+1][CENTER] = forceMap[x+1][y];
+        if (forceMap[x][y] < forceMap[RIGHT(x)][y]) continue;
+        touchSquare[RIGHT(CENTER)][CENTER] = forceMap[RIGHT(x)][y];
       }
       // bottom-left
       if (x > 0 && y < ROWS-1) {
-        if (forceMap[x][y] < forceMap[x-1][y+1]) continue;
-        touchSquare[CENTER-1][CENTER+1] = forceMap[x-1][y+1];
+        if (forceMap[x][y] < forceMap[LEFT(x)][DOWN(y)]) continue;
+        touchSquare[LEFT(CENTER)][DOWN(CENTER)] = forceMap[LEFT(x)][DOWN(y)];
       }
       // bottom
       if (y < ROWS-1) {
-        if (forceMap[x][y] < forceMap[x][y+1]) continue;
-        touchSquare[CENTER][CENTER+1] = forceMap[x][y+1];
+        if (forceMap[x][y] < forceMap[x][DOWN(y)]) continue;
+        touchSquare[CENTER][DOWN(CENTER)] = forceMap[x][DOWN(y)];
       }
       // bottom-right
       if (x < COLS-1 && y < ROWS-1) {
-        if (forceMap[x][y] < forceMap[x+1][y+1]) continue;
-        touchSquare[CENTER+1][CENTER+1] = forceMap[x+1][y+1];
+        if (forceMap[x][y] < forceMap[RIGHT(x)][DOWN(y)]) continue;
+        touchSquare[RIGHT(CENTER)][DOWN(CENTER)] = forceMap[RIGHT(x)][DOWN(y)];
       }
 
       touchSquare[CENTER][CENTER] = forceMap[x][y];
@@ -157,10 +161,8 @@ void processForceMap() {
       e.pos.y = y + vForce / totalForce * 2 - 1;
       e.centerForce = touchSquare[1][1];
       e.totalForce = totalForce;
-      e.vector.radius = sqrt(pow(e.pos.x + 1,2) + pow(e.pos.y + 1,2));
-      e.vector.sine = (e.pos.y + 1) / e.vector.radius;
 
-      ein[sz++] = e;
+      if (sz < VT_EVENT_MAX) ein[sz++] = e;
      
       if (Touch_Config.output == VT_OUTPUT_TOUCH) {
         Serial.print(e.pos.x);

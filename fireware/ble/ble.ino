@@ -1,21 +1,60 @@
-/*
-  mainboard.ino - ForceFusion VizTact firmware on ATMEGA32U4 (Arduino Leonardo).
+ /* Copyright (c) 2014, Nordic Semiconductor ASA
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
-  Copyright (c) 2017 Quark Li
+/**
+ * HID (Human Interface Device) template
+ */
 
-  This software is developped for a commersial product. Modification, further
-  development and/or redistribution without prior agreement from the author 
-  is prohibited.
+/** @defgroup HID_keyboard_project HID_keyboard_project
+@{
+@ingroup projects
+@brief HID Keyboard project that can be used as a template for new projects.
 
-  To whom is interested in using this software, please contact quarkli@gmail.com
-*/
+@details
 
-#include "hardware.h"
-#include "touch.h"
-#include "event.h"
-#include "softreset.h"
+IMPORTANT: This example still is not compatible with CHIPKIT
+
+This project is a firmware template for new HID keyboard projects.
+The project will run correctly in its current state.
+This will show the Arduino board as a HID Keybaord to the Win 8.
+After HID Keyboard has been bonded with Win 8.
+The letter 'A' is sent to the Win 8 every 4 seconds.
+With this project you have a starting point for adding your own application functionality.
+
+The following instructions describe the steps to be made on the Windows PC:
+
+ -# Install the Master Control Panel on your computer. Connect the Master Emulator
+    (nRF2739) and make sure the hardware drivers are installed.
+
+ -# Alternatively you should be able to get the board to work directly with a iOS 7 device, Win 8/Win RT PC after adding
+ the required buttons for I/O.
+
+Note: Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
+
+The setup() and the loop() functions are the equvivlent of main() .
+
+ */
 #include <SPI.h>
 #include "services.h"
+
 #include <lib_aci.h>
 #include "aci_setup.h"
 #include "EEPROM.h"
@@ -59,6 +98,7 @@ static bool timing_change_done = false;
 Variables used for the timer on the AVR
 */
 volatile uint8_t timer1_f = 0;
+
 /*
 The keyboard report is 8 bytes
 0 Modifier keys
@@ -71,6 +111,7 @@ The keyboard report is 8 bytes
 7 Keycode 6
 */
 uint8_t keypressA[8]={ 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
 /*** FUNC
 
 Name:           Timer1start
@@ -149,6 +190,7 @@ void __ble_assert(const char *file, uint16_t line)
   Serial.print("\n");
   while(1);
 }
+
 /*************NOTE**********
 Scroll to the end of the file and read the loop() and setup() functions.
 The loop/setup functions is the equivalent of the main() function
@@ -414,9 +456,9 @@ void aci_loop()
         if (ACI_CMD_GET_DEVICE_VERSION == aci_evt->params.cmd_rsp.cmd_opcode)
         {
           //Store the version and configuration information of the nRF8001 in the Hardware Revision String Characteristic
-//          lib_aci_set_local_data(&aci_state, PIPE_DEVICE_INFORMATION_HARDWARE_REVISION_STRING_SET,
-//               (uint8_t *)&(aci_evt->params.cmd_rsp.params.get_device_version),
-//                   sizeof(aci_evt_cmd_rsp_params_get_device_version_t));
+          lib_aci_set_local_data(&aci_state, PIPE_DEVICE_INFORMATION_HARDWARE_REVISION_STRING_SET,
+               (uint8_t *)&(aci_evt->params.cmd_rsp.params.get_device_version),
+                   sizeof(aci_evt_cmd_rsp_params_get_device_version_t));
         }
         break;
 
@@ -625,21 +667,17 @@ void aci_loop()
   }
 }
 
-#define ENABLE_MOUSE 1
-#define ENABLE_USB_MOUSE 0
-#define ENABLE_BT_MOUSE 1
 
-#if ENABLE_USB_MOUSE
-#include <Mouse.h>
-#endif
 
-#define ENABLE_MEASUREMENT  0
-#define ENABLE_EVENT_DEBUG 1
 
-static short count = 0;                // Scan rate counter
-static unsigned long t0 = millis();   // Time in (ms)
 
-void setup() {
+/*
+This is called only once after a reset of the AVR
+*/
+void setup(void)
+{
+  Serial.begin(115200);
+
   /**
   Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
   */
@@ -658,8 +696,8 @@ void setup() {
 
   //Tell the ACI library, the MCU to nRF8001 pin connections
   aci_state.aci_pins.board_name = BOARD_DEFAULT; //REDBEARLAB_SHIELD_V1_1 See board.h for details
-  aci_state.aci_pins.reqn_pin   = 1;
-  aci_state.aci_pins.rdyn_pin   = 0;
+  aci_state.aci_pins.reqn_pin   = 9;
+  aci_state.aci_pins.rdyn_pin   = 8;
   aci_state.aci_pins.mosi_pin   = MOSI;
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
@@ -679,117 +717,44 @@ void setup() {
   */
   //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
   lib_aci_init(&aci_state, false);
+#if 1
+  pinMode(6, INPUT); //Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
+  if (0x01 == digitalRead(6))
+  {
+    //Clear the pairing
+    Serial.println(F("Pairing cleared. Remove the wire on Pin 6 and reset the board for normal operation."));
+    //Address. Value
+    EEPROM.write(0, 0xFF);
+    while(1) {};
+  }
+#endif
+  //Initialize the state of the bond
   aci_state.bonded = ACI_BOND_STATUS_FAILED;
-
-  vt_init();
-
-  Touch_Config.hInvert = false;
-  Touch_Config.vInvert = true;
-  Touch_Config.output = VT_OUTPUT_OFF;
 }
 
-byte rstCnt = 0;
 
-#if ENABLE_MOUSE
-byte clr = 0;
-float px, py;
-unsigned long last = 0;
-#endif
+/* This is like a main() { while(1) { loop() } }
+*/
+void loop(void)
+{
 
-void loop() {
   aci_loop();
-
-  bool hasEvent = false;
-  scanTouch();
-  while (VT_TOUCH_EVENT* e = nextEvent()) {
-    if (aci_state.device_state == ACI_DEVICE_SLEEP) {
-      // Wakeup the nRF8001 when the mouse is moved
-      lib_aci_wakeup();
-    }
-
-#if ENABLE_MOUSE
-    hasEvent = true;
-    if (clr > 0) {
-      float distx = e->pos.x - px;
-      float disty = e->pos.y - py;
-      float sp = sqrt(pow(distx, 2) + pow(disty, 2)) / (e->ts - last) * 100;
-#if ENABLE_USB_MOUSE
-      Mouse.move(distx * 10 * sp, disty * 10 * sp, 0);
-#endif
-#if ENABLE_BT_MOUSE
-  uint8_t m[4] = {0,distx * 10 * sp, disty * 10 * sp,0};
 
   /*
   Method for sending HID Reports
   */
   if (lib_aci_is_pipe_available(&aci_state, PIPE_HID_SERVICE_HID_REPORT_TX)
-      && (aci_state.data_credit_available > 0))
+      && (aci_state.data_credit_available == 2)
+      && (1 == timer1_f) )
   {
-    Serial.println(distx * 10 * sp);
-    Serial.println((int)(char)m[1]);
-    Serial.println(disty * 10 * sp);
-    Serial.println((int)(char)m[2]);
-  Serial.print("### Credit Total:");
-  Serial.println(aci_state.data_credit_available);
-    lib_aci_send_data(PIPE_HID_SERVICE_HID_REPORT_TX, &m[0], 4);
+    timer1_f = 0;
+    keypressA[2] = 0x04;
+    lib_aci_send_data(PIPE_HID_SERVICE_HID_REPORT_TX, &keypressA[0], 8);
+    aci_state.data_credit_available--;
+    keypressA[2] = 0x00;
+    lib_aci_send_data(PIPE_HID_SERVICE_HID_REPORT_TX, &keypressA[0], 8);
     aci_state.data_credit_available--;
   }
-#endif
-    }
-    px = e->pos.x;
-    py = e->pos.y;
-    last = e->ts;
-    if (clr < 2) clr++;
-#endif
-    // long press grid(0, 0) for ~4sec will reboot the board
-    if (e->grid.x == 0 && e->grid.y == 0) rstCnt++;
-    else rstCnt = 0;
 
-    if (rstCnt > 100) {
-      EEPROM.write(0, 0xFF);
-      reset();
-    }
-
-#if ENABLE_EVENT_DEBUG
-      Serial.print("Seq No. / Timestamp: ");
-      Serial.print(e->seq);
-      Serial.print(" / ");
-      Serial.println(e->ts);
-      Serial.print("GRID: (");
-      Serial.print(e->grid.x);
-      Serial.print(", ");
-      Serial.print(e->grid.y);
-      Serial.println(")");
-      Serial.print("POS: (");
-      Serial.print(e->pos.x, 3);
-      Serial.print(", ");
-      Serial.print(e->pos.y, 3);
-      Serial.println(")");
-      Serial.print("Force: ");
-      Serial.print(e->centerForce);
-      Serial.print(" / ");
-      Serial.println(e->totalForce);
-      Serial.println();
-#endif   
-  }
-
-#if ENABLE_MOUSE
-  if (!hasEvent && clr > 0) clr--;
-#endif
-
-#if ENABLE_MEASUREMENT     // calculate scan rate (Hz) in 10 seconds period
-  unsigned long t1 = millis();
-
-  if (t1 - t0 >= 10000) {
-    Serial.print("Scan rate (Hz) = ");
-    Serial.println(count / 10);
-    t0 = t1;
-    count = 0;
-  }
-  else {
-    count++;
-  }
-#endif
 }
-
 

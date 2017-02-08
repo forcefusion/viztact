@@ -16,13 +16,13 @@ static const byte num_of_pins = sizeof(sel_pins) / sizeof(byte);
 static byte _convertLine(byte line);
 
 void vt_init() {
-  pinMode(DOUT_REG, OUTPUT);
-  pinMode(DOUT_LCLK, OUTPUT);
-  pinMode(DOUT_CLK, OUTPUT);
+  pinMode(DOUT_STCP, OUTPUT);
+  pinMode(DOUT_DS, OUTPUT);
+  pinMode(DOUT_SHCP, OUTPUT);
 
-  digitalWrite(DOUT_LCLK, HIGH);
-  digitalWrite(DOUT_CLK, HIGH);
-  digitalWrite(DOUT_REG, LOW);
+  digitalWrite(DOUT_DS, HIGH);
+  digitalWrite(DOUT_SHCP, HIGH);
+  digitalWrite(DOUT_STCP, LOW);
 
   // initialize analog read lines selection pins
   for (byte i = 0; i < num_of_pins; i++) {
@@ -33,15 +33,15 @@ void vt_init() {
 void vt_pullup(byte line) {
   if (LINES_SPLIT == DOUT_LINES) line = _convertLine(line);
   
-  digitalWrite(DOUT_LCLK, LOW);
+  digitalWrite(DOUT_DS, LOW);
 
   for (byte i = 0; i < DOUT_LINES; i++) {
-    digitalWrite(DOUT_CLK, LOW);
-    digitalWrite(DOUT_REG, i == line);
-    digitalWrite(DOUT_CLK, HIGH);
+    digitalWrite(DOUT_STCP, i == line);
+    digitalWrite(DOUT_SHCP, LOW);
+    digitalWrite(DOUT_SHCP, HIGH);
   }
 
-  digitalWrite(DOUT_LCLK, HIGH);
+  digitalWrite(DOUT_DS, HIGH);
 }
 
 byte vt_read(byte line) {

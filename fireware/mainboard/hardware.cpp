@@ -17,12 +17,12 @@ static byte _convertLine(byte line);
 
 void vt_init() {
   pinMode(DOUT_STCP, OUTPUT);
-  pinMode(DOUT_DS, OUTPUT);
   pinMode(DOUT_SHCP, OUTPUT);
+  pinMode(DOUT_DS, OUTPUT);
 
-  digitalWrite(DOUT_DS, HIGH);
-  digitalWrite(DOUT_SHCP, HIGH);
+  digitalWrite(DOUT_SHCP, LOW);
   digitalWrite(DOUT_STCP, LOW);
+  digitalWrite(DOUT_DS, LOW);
 
   // initialize analog read lines selection pins
   for (byte i = 0; i < num_of_pins; i++) {
@@ -33,15 +33,15 @@ void vt_init() {
 void vt_pullup(byte line) {
   if (LINES_SPLIT == DOUT_LINES) line = _convertLine(line);
   
-  digitalWrite(DOUT_DS, LOW);
+  digitalWrite(DOUT_STCP, LOW);
 
   for (byte i = 0; i < DOUT_LINES; i++) {
-    digitalWrite(DOUT_STCP, i == line);
-    digitalWrite(DOUT_SHCP, LOW);
+    digitalWrite(DOUT_DS, i == line);
     digitalWrite(DOUT_SHCP, HIGH);
+    digitalWrite(DOUT_SHCP, LOW);
   }
 
-  digitalWrite(DOUT_DS, HIGH);
+  digitalWrite(DOUT_STCP, HIGH);
 }
 
 byte vt_read(byte line) {
